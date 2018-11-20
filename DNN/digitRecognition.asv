@@ -1,0 +1,303 @@
+close all
+clear all   %  working DNN
+clc 
+nh = [60,45,35,25];                                                      % one hidden layer with 30 nodes
+epoch =1;                                                      % training epochs
+mini_batch_size =10;                                           % mini bacth size
+eta1=3;
+sparsityParam = 0.07;   % desired average activation of the hidden units.
+                     % (This was denoted by the Greek alphabet rho, which looks like a lower-case "p",
+		     %  in the lecture notes). 
+lambda = 0.05;     % weight decay parameter      , regularization 
+beta = 2;             % k l divergence coefficient
+% test_inputs=csvread('testing_data.csv');
+% test_inputs=test_inputs';
+%% SIDH
+training_inputs1=csvread('training_data.csv');
+training_inputs1=training_inputs1';
+%% NASA
+% load('trainData3');
+% load('testData3');
+% inputs=[Untitled;Untitled1;Untitled2;Untitled3;Untitled4;Untitled5;Untitled6;Untitled7;Untitled8;Untitled9;Untitled10;Untitled11;Untitled12;Untitled13;...
+%     Untitled14;Untitled15;Untitled16;Untitled17;Untitled18;Untitled19];
+% inputs1=[inputs(:,1);inputs(:,3)];
+% inputs1=inputs1(1:819000);
+% training_inputs=reshape(inputs1,150,5460);
+% k=2730;
+% for i=1:size(training_inputs,2)
+%     if(i<=k)
+%     training_results(1,i)=0;
+%     else
+%     training_results(1,i)=1; 
+%     end
+% end
+%% test of NASA
+% input=[Untitled21(:,1);Untitled22(:,1);Untitled23(:,1);Untitled24(:,1);Untitled20(:,1);Untitled21(:,3);Untitled22(:,3);...
+%     Untitled23(:,3);Untitled24(:,3);Untitled20(:,3)];%;Untitled21(:,7);Untitled22(:,7);Untitled23(:,7);Untitled24(:,7);Untitled20(:,7)];
+% input=input(1:204000);
+% test_inputs=reshape(input,150,1360);
+% k=682;
+% for i=1:size(test_inputs,2)
+%     if(i<=k)
+%     test_results(1,i)=0;
+%     else
+%     test_results(1,i)=1; 
+%      
+%     end
+% end
+%% mnist dataset
+% load('mnist.mat'); 
+% training_inputs = double(mnist{1,1}');                          % transpose the matrix to make the pixel data as the row element
+% training_results =double(mnist{1,2});                   % convert the digit into the activation value of the neural network
+% 
+% validation_inputs = double(mnist{2,1}');
+% validation_results = mnist{2,2};
+% 
+% test_inputs = double(mnist{3,1}');
+% test_results =double(mnist{3,2});
+%% training dataset
+load('105.mat')
+load('97.mat')
+load('118.mat')
+load('130.mat') 
+input=[X105_DE_time(1:120000);X097_DE_time(1:120000);X118_DE_time(1:120000);X130_DE_time(1:120000)];
+j=1;
+for i=1:100:size(input,1)-99
+    training_inputs(:,j)=input(i:(i+99),1);
+    j=j+1;
+end
+k=1200;
+for i=1:size(training_inputs,2)
+    if(i<=1200)
+    training_results(1,i)=0;
+    elseif(i<=1200*2)
+    training_results(1,i)=1;
+    elseif(i<=1200*3)
+    training_results(1,i)=2;
+    else
+    training_results(1,i)=3;
+    end
+end
+% training_results=vectorizeData(training_results,size(training_results,1));
+%% Testing dataset_0  same both
+% load('105.mat')
+% load('97.mat')
+% load('118.mat')
+% load('130.mat') 
+% input=[X105_DE_time;X097_DE_time;X118_DE_time;X130_DE_time];
+% for i=1:100:size(input,1)-99
+%     test_inputs(:,i)=input(i:(i+99),1);
+% end
+% 
+% 
+% for i=1:size(test_inputs,2)
+%     if(i<size(X105_DE_time,1)/100)
+%     test_results(1,i)=0;
+%     elseif(i<(size(X105_DE_time,1)+size(X097_DE_time,1))/100)
+%     test_results(1,i)=1;
+%     elseif(i<(size(X118_DE_time)+size(X105_DE_time,1)+size(X097_DE_time,1))/100)
+%     test_results(1,i)=2;
+%     else
+%     test_results(1,i)=3;
+%     end
+% end
+%% testing dataset_1
+load('98.mat')
+load('106.mat')
+load('119.mat')
+load('131.mat')
+input=[X098_DE_time(1:121000);X106_DE_time(1:121000);X119_DE_time(1:121000);X131_DE_time(1:121000)];
+j=1;
+for i=1:100:size(input,1)-99 
+    test_inputs(:,j)=input(i:(i+99),1);
+    j=j+1 ;
+end
+for i=1:size(test_inputs,2)
+    if(i<=k)
+    test_results(1,i)=0;
+    elseif(i<=k*2)
+    test_results(1,i)=1;
+    elseif(i<=k*3)
+    test_results(1,i)=2;                                  
+    else
+    test_results(1,i)=3;
+    end
+end
+%% testing dataset_2
+% load('99.mat')
+% load('107.mat')
+% load('120.mat')
+% load('132.mat')
+% input=[X099_DE_time;X107_DE_time;X120_DE_time;X132_DE_time];
+% for i=1:100:size(input,1)-99 
+%     test_inputs(:,i)=input(i:(i+99),1);
+% end
+% for i=1:size(test_inputs,2)
+%     if(i<size(X099_DE_time,1)/100)
+%     test_results(1,i)=0;
+%     elseif(i<(size(X107_DE_time,1)+size(X099_DE_time,1))/100)
+%     test_results(1,i)=1;
+%     elseif(i<(size(X120_DE_time)+size(X107_DE_time,1)+size(X099_DE_time,1))/100)
+%     test_results(1,i)=2;
+%     else
+%     test_results(1,i)=3;
+%     end
+% end 
+%%test dataset_3
+% load('100.mat')
+% load('108.mat')
+% load('121.mat')
+% load('133.mat')
+% input=[X100_DE_time;X108_DE_time;X121_DE_time;X133_DE_time];
+% for i=1:100:size(input,1)-99 
+%     test_inputs(:,i)=input(i:(i+99),1);
+% end
+% for i=1:size(test_inputs,2)
+%     if(i<size(X100_DE_time,1)/100)
+%     test_results(1,i)=0;
+%     elseif(i<(size(X108_DE_time,1)+size(X100_DE_time,1))/100)
+%     test_results(1,i)=1;
+%     elseif(i<(size(X121_DE_time)+size(X108_DE_time,1)+size(X100_DE_time,1))/100)
+%     test_results(1,i)=2;
+%     else
+%     test_results(1,i)=3;
+%     end
+% end 
+
+% test_dataset_4_diameter diff load same
+% load('97.mat')
+% load('169.mat')
+% load('185.mat')
+% load('197.mat')
+% input=[X097_DE_time;X169_DE_time;X185_DE_time;X197_DE_time];
+% for i=1:100:size(input,1)-99 
+%     test_inputs(:,i)=input(i:(i+99),1);
+% end
+% for i=1:size(test_inputs,2)
+%     if(i<size(X097_DE_time,1)/100)
+%     test_results(1,i)=0;
+%     elseif(i<(size(X169_DE_time,1)+size(X097_DE_time,1))/100)
+%     test_results(1,i)=1;
+%     elseif(i<(size(X185_DE_time)+size(X169_DE_time,1)+size(X097_DE_time,1))/100)
+%     test_results(1,i)=2;
+%     else
+%     test_results(1,i)=3;
+%     end
+% end
+
+% test_dataset_4_diameter diff load diff
+% whitenin
+% load('98.mat')
+% load('170.mat')
+% load('186.mat')
+% load('198.mat')
+% input=[X098_DE_time;X170_DE_time;X186_DE_time;X198_DE_time];
+% for i=1:100:size(input,1)-99 
+%     test_inputs(:,i)=input(i:(i+99),1);
+% end
+% for i=1:size(test_inputs,2)
+%     if(i<size(X098_DE_time,1)/100)
+%     test_results(1,i)=0;
+%     elseif(i<(size(X170_DE_time,1)+size(X098_DE_time,1))/100)
+%     test_results(1,i)=1;
+%     elseif(i<(size(X186_DE_time)+size(X170_DE_time,1)+size(X098_DE_time,1))/100)
+%     test_results(1,i)=2;
+%     else
+%     test_results(1,i)=3;
+%     end
+% end
+  
+training_results=vectorizeData(training_results,5);
+% test_results=vectorizeData(test_results,3);
+% whitening  
+% x=training_inputs;
+% sigma = x * x' / size(x, 2);
+% [U,S,V] = svd(sigma);
+% training_inputs = diag(1./sqrt(diag(S)+eta)) * U' * x;        %pcaWhitening
+% training_inputs = U * diag(1./sqrt(diag(S) + eta)) * U' * x;  %zcaWhitening
+
+l  = 1+length(nh)+1;                                            % number of layer     
+           
+n = zeros(l,1);                                                 % initialize the nodes
+n(1) = size(training_inputs,1);                                      % nodes at the input layer, number of pixel square
+
+for i = 1:length(nh)   
+    n(1+i) = nh(i);                                             % nodes at the hidden layers
+end
+
+n(l) = size(training_results,1);                                                      % nodes at the output layer, number of digit                                                     % nodes at the output layer, number of digit
+ 
+W = cell([1,l-1]);                                              % Weight  l=3
+b = cell([1,l-1]);                                              % Bias
+
+for i = 1:l-1
+    W{i} = randn(n(i+1),n(i));
+    b{i} = randn(n(i+1),1);
+end
+ 
+corr_val = zeros(epoch,1);                                      % number of correct output for each epoch
+
+[~,col] = size(training_inputs);                                % access the number of column
+ 
+for i = 1:epoch 
+    col_prime = randperm(col);
+    training_inputs_prime = training_inputs(:,col_prime);
+    training_results_prime = training_results(:,col_prime);
+%     training_inputs_prime=training_inputs_prime(:,1:4840);
+%     training_results_prime=training_results_prime(:,1:4840);
+%     [~,col] = size(training_inputs_prime);
+      
+    mini_batches = [];
+    for j = 1:mini_batch_size:col
+         mini_batches{end+1} = {training_inputs_prime(:,j:j+min(mini_batch_size-1,col-j)), training_results_prime(:,j:j+min(mini_batch_size-1,col-j))};
+    end 
+%     for j = 1:length(mini_batches)
+%         [W,b] = updateWeightBias(mini_batches{j}{1}, mini_batches{j}{2},eta,W,b,n,l);
+%     end
+%%   LBFGS using minFunc
+
+patches=training_inputs_prime;
+for ii=1:l-2
+    hiddenSize=n(ii+1);
+    visibleSize=n(ii);
+    
+    theta = initializeParameters(hiddenSize, visibleSize);
+
+%  Use minFunc to minimize the function
+addpath minFunc/
+options.Method = 'lbfgs'; 
+options.maxIter =4;	  
+options.display = 'on'; 
+[opttheta, cost] = minFunc( @(p) sparseAutoencoderCost(p, ...
+                                   visibleSize, hiddenSize, ...
+                                   lambda, sparsityParam, ...
+                                   beta, patches), ...
+                              theta, options); 
+W1 = reshape(opttheta(1:hiddenSize*visibleSize), hiddenSize, visibleSize);
+W{ii}=W1;
+patches=feedforward1(training_inputs_prime,W,b,ii+1);
+end
+
+%% back-propagation
+    for t=1:100
+      
+for j = 1:length(mini_batches)
+        [W,b] = updateWeightBias(mini_batches{j}{1}, mini_batches{j}{2},eta1,W,b,n,l);
+end
+%% dataset for other classifier , svm ,rf,rbf
+    test_inputs1=(feedforward1(test_inputs,W,b,l-1));
+    test_inputs1=test_inputs1';
+    test_results1=test_results';
+    trainData=feedforward1(training_inputs_prime,W,b,l-1);
+    trainData=trainData';
+    trainLabel=training_results_prime';
+%% testing using softmax
+corr_val(i) = validateNetwork(test_inputs, test_results, W, b, l);
+% test_results1=validate(test_inputs,test_results,W,b,l);
+disp(['Epoch {',num2str(t),'} out of ',num2str(100),': ', num2str(corr_val(i)),'/',num2str(length(test_results))]);
+    end
+%     g=1:1360;
+%     plot(g,test_results1,'red');
+end
+
+ 
